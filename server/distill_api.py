@@ -1,10 +1,9 @@
 import os
 from typing import Optional
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
-from fastapi import FastAPI, UploadFile, File, Form, status, Body, Path, Query
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from fastapi import  UploadFile, File, Form, status
 from tools.error_define import BinaryDecodingError, FileConversionError, DataDistillationError
-from server.router import openar1_router, ResponseModel, RequestModel, GenerationRequestModel
+from server.router import openar1_router, ResponseModel, GenerationRequestModel
 import pandas as pd
 import uuid
 import datasets
@@ -13,7 +12,7 @@ from distilabel.llms import OpenAILLM
 from distilabel.pipeline import Pipeline
 from distilabel.steps import StepResources
 from distilabel.steps.tasks import TextGeneration
-
+# import subprocess
 
 def excel_2_arrow(data_path, distill_path):
     '''excel 转蒸馏需要的格式'''
@@ -28,8 +27,6 @@ def excel_2_arrow(data_path, distill_path):
 
     da = Dataset.from_list(data_list)
     da.save_to_disk(distill_path)
-    # for i in range(da.shape[0]):
-    #     print(da[i])
 
 
 def build_distilabel_pipeline(
@@ -120,11 +117,14 @@ def distill(args):
     print("Generation pipeline finished!")
 
     # distilled to sft
-    tmp = distiset["default"]["train"].map(qwen_template)
+    dataset = distiset["default"]["train"].map(qwen_template)
 
     #
-    tmp.save_to_disk(args.hf_output_dataset)
-    # tmp.save_to_disk(distiset_path=args.hf_output_dataset)
+    if args.hf_output_dataset:
+        print(f"Pushing resulting dataset to '{args.hf_output_dataset}'...")
+        dataset.save_to_disk(args.hf_output_dataset)
+        print(dataset)
+        print("distilled data saved!")
 
     try:
         dataset = load_from_disk(dataset_path=args.hf_output_dataset)
@@ -132,15 +132,10 @@ def distill(args):
         print(f"{e}")
         dataset = load_dataset(path=args.hf_output_dataset)
 
-
     print("dataset:")
     print(dataset)
-
-    if args.hf_output_dataset:
-        print(f"Pushing resulting dataset to '{args.hf_output_dataset}'...")
-        distiset.save_to_disk(distiset_path=args.hf_output_dataset)
-        print(distiset)
-        print("distilled data saved!")
+    for i in range(dataset.shape[0]):
+        print(dataset[i])
 
 
 def qwen_template(data):
@@ -223,21 +218,6 @@ async def distill_data(
     except Exception as e:
         raise DataDistillationError(e)
 
-    # try:
-    #     # 读取蒸馏后数据，并返回
-    #     try:
-    #         dataset = load_from_disk(dataset_path=os.path.join(distilled_data_path, "default", "train"))
-    #     except Exception as e:
-    #         print(f"{e}")
-    #         dataset = load_dataset(path=distilled_data_path)
-    #
-    #     for i in range(dataset.shape[0]):
-    #         if args.template == "qwen":
-    #             dataset_map = dataset.map(qwen_template)
-    #     print(dataset_map)
-    # except Exception as e:
-    #     raise BinaryDecodingError(e)
-
     content = {"isSuc": True, "code": 0, "msg": "Success ~", "res": {"uid": str(uid), "distilled_data_path":
         distilled_data_path}}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
@@ -265,7 +245,7 @@ async def sft_distilled(
         import yaml
         with open(os.path.join(dir_path, "sft_configs.yaml"), 'r') as f:
             data = yaml.safe_load(f)
-            data["dataset_name"] = os.path.join(dir_path, "distilled/default/train")
+            data["dataset_name"] = os.path.join(dir_path, "distilled")
 
         with open(os.path.join(dir_path, "sft_configs.yaml"), 'w', encoding='utf-8') as f:
             # 使用 yaml.dump() 方法将字典 d 转换为 YAML 格式，并将其写入文件中
@@ -277,26 +257,22 @@ async def sft_distilled(
     # 更新数据路径
     system_cmd_str = f'accelerate launch --config_file {str(os.path.join(dir_path, "accelerate_configs.yaml"))} {os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], "third_party_tools", "open-r1/src/open_r1/sft.py")} --config {str(os.path.join(dir_path, "sft_configs.yaml"))}'
     print("system_cmd_str:", system_cmd_str)
+    os.system(system_cmd_str)
 
-    import subprocess
-    commands = [
-        [system_cmd_str]
-        # ["accelerate", "launch", "--config_file",
-        #  f"{os.path.join(dir_path, 'accelerate_configs.yaml')}",
-        #  "src/open_r1/sft.py",
-        #  "--config", f'{os.path.join(dir_path, "sft_configs.yaml")}']
-    ]
-    for cmd in commands:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,  # 捕获输出
-            text=True,  # 返回字符串（而非字节）
-            shell=True  # 在 Windows 下可能需要
-        )
-        print(f"命令: {' '.join(cmd)}")
-        print("退出码:", result.returncode)
-        print("输出:\n", result.stdout)  # 标准输出
-        print("错误:\n", result.stderr)  # 标准错误
+    # commands = [
+    #     [system_cmd_str]
+    # ]
+    # for cmd in commands:
+    #     result = subprocess.run(
+    #         cmd,
+    #         capture_output=True,  # 捕获输出
+    #         text=True,  # 返回字符串（而非字节）
+    #         shell=True  # 在 Windows 下可能需要
+    #     )
+    #     print(f"命令: {' '.join(cmd)}")
+    #     print("退出码:", result.returncode)
+    #     print("输出:\n", result.stdout)  # 标准输出
+    #     print("错误:\n", result.stderr)  # 标准错误
 
     content = {"isSuc": True, "code": 0, "msg": "Success ~", "res": ""}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)

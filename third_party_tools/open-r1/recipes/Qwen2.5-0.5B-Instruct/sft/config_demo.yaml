@@ -3,7 +3,7 @@ model_name_or_path: /data/nfs_data/models/Qwen/Qwen2.5-0.5B-Instruct
 model_revision: main
 torch_dtype: bfloat16
 #attn_implementation: sdpa
-#attn_implementation: flash_attention_2              # bjb
+attn_implementation: flash_attention_2              # bjb
 
 # Data training arguments
 dataset_name: F:/inspur/datasets/open-r1/OpenR1-Math-220k
@@ -11,7 +11,7 @@ dataset_name: F:/inspur/datasets/open-r1/OpenR1-Math-220k
 dataset_num_proc: 1
 
 # SFT trainer config
-bf16: false
+bf16: true
 do_eval: false
 #use_liger: false              # bjb
 use_liger_kernel: false              # bjb

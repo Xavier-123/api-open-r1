@@ -110,10 +110,6 @@ def main(script_args, training_args, model_args):
     print("dataset:")
     print(dataset)
 
-    print("-"*50)
-    for i in range(dataset["train"].shape[0]):
-        print(dataset["train"][i])
-
     ################
     # Load tokenizer
     ################
@@ -139,13 +135,20 @@ def main(script_args, training_args, model_args):
     )
     training_args.model_init_kwargs = model_kwargs
 
+    try:
+        dataset = dataset[script_args.dataset_train_split]
+    except Exception as e:
+        print(e)
+        dataset = dataset
+
     ############################
     # Initialize the SFT Trainer
     ############################
     trainer = SFTTrainer(
         model=model_args.model_name_or_path,
         args=training_args,
-        train_dataset=dataset[script_args.dataset_train_split],
+        train_dataset=dataset,
+        # train_dataset=dataset[script_args.dataset_train_split],
         eval_dataset=dataset[script_args.dataset_test_split] if training_args.eval_strategy != "no" else None,
         processing_class=tokenizer,
         peft_config=get_peft_config(model_args),
@@ -163,7 +166,13 @@ def main(script_args, training_args, model_args):
         checkpoint = last_checkpoint
     train_result = trainer.train(resume_from_checkpoint=checkpoint)
     metrics = train_result.metrics
-    metrics["train_samples"] = len(dataset[script_args.dataset_train_split])
+
+    try:
+        train_samples = len(dataset[script_args.dataset_train_split])
+    except Exception as e:
+        print(e)
+        train_samples = len(dataset)
+    metrics["train_samples"] = train_samples
     trainer.log_metrics("train", metrics)
     trainer.save_metrics("train", metrics)
     trainer.save_state()

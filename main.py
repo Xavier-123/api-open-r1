@@ -4,6 +4,9 @@ from fastapi.responses import JSONResponse
 from server.router import utils_router, openar1_router
 from tools.error_define import CustomError
 from tools.log import logger
+import os
+
+os.environ["WANDB_DISABLED"] = "true"
 
 app = FastAPI(title='my api', version='v1.0')
 app.include_router(utils_router, prefix="")
