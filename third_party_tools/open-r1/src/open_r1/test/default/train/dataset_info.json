@@ -1,0 +1,87 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "text_generation_0",
+  "dataset_name": "parquet",
+  "dataset_size": 52160,
+  "description": "",
+  "download_checksums": {
+    "C:/Users/Xavier/.cache/distilabel/pipelines/pipeline_text_generation_0/53bedcbb53ca1db3fed4f15c1fb88e4d8a6089c8/executions/250e556e44b037d50c01a88bae584f14e722cee0/data/steps_outputs/text_generation_0/00001.parquet": {
+      "num_bytes": 54971,
+      "checksum": null
+    }
+  },
+  "download_size": 54971,
+  "features": {
+    "problem": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "solution": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "messages": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "generation": {
+      "feature": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "_type": "Sequence"
+    },
+    "distilabel_metadata": [
+      {
+        "raw_input_text_generation_0": [
+          {
+            "content": {
+              "dtype": "string",
+              "_type": "Value"
+            },
+            "role": {
+              "dtype": "string",
+              "_type": "Value"
+            }
+          }
+        ],
+        "raw_output_text_generation_0": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "statistics_text_generation_0": {
+          "input_tokens": {
+            "dtype": "int64",
+            "_type": "Value"
+          },
+          "output_tokens": {
+            "dtype": "int64",
+            "_type": "Value"
+          }
+        }
+      }
+    ],
+    "model_name": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 107131,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 52160,
+      "num_examples": 10,
+      "dataset_name": "parquet"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

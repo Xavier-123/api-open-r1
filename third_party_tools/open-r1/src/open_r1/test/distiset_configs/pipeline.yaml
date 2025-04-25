@@ -1,0 +1,218 @@
+distilabel:
+  version: 1.5.3
+pipeline:
+  connections:
+  - from: text_generation_0
+    to: []
+  - from: load_data_from_hub_0
+    to:
+    - text_generation_0
+  description: null
+  name: pipeline_text_generation_0
+  routing_batch_functions: []
+  steps:
+  - name: text_generation_0
+    step:
+      add_raw_input: true
+      add_raw_output: true
+      columns:
+      - instruction
+      group_generations: true
+      input_batch_size: 64
+      input_mappings:
+        instruction: problem
+      llm:
+        base_url: http://10.108.0.182:21003/v1
+        default_headers: null
+        generation_kwargs:
+          max_new_tokens: 8192
+          temperature: 0.6
+        jobs_ids: null
+        max_retries: 0
+        model: QwQ-32B-W8A8
+        offline_batch_generation_block_until_done: null
+        structured_output: null
+        timeout: 600
+        type_info:
+          module: distilabel.models.llms.openai
+          name: OpenAILLM
+        use_offline_batch_generation: false
+      name: text_generation_0
+      num_generations: 1
+      output_mappings: {}
+      resources:
+        cpus: null
+        gpus: null
+        memory: null
+        replicas: 1
+        resources: null
+      runtime_parameters_info:
+      - name: resources
+        runtime_parameters_info:
+        - description: The number of replicas for the step.
+          name: replicas
+          optional: true
+        - description: The number of CPUs assigned to each step replica.
+          name: cpus
+          optional: true
+        - description: The number of GPUs assigned to each step replica.
+          name: gpus
+          optional: true
+        - description: The memory in bytes required for each step replica.
+          name: memory
+          optional: true
+        - description: A dictionary containing names of custom resources and the number
+            of those resources required for each step replica.
+          name: resources
+          optional: true
+      - description: The number of rows that will contain the batches processed by
+          the step.
+        name: input_batch_size
+        optional: true
+      - name: llm
+        runtime_parameters_info:
+        - description: The kwargs to be propagated to either `generate` or `agenerate`
+            methods within each `LLM`.
+          keys:
+          - name: max_new_tokens
+            optional: true
+          - name: logprobs
+            optional: true
+          - name: top_logprobs
+            optional: true
+          - name: echo
+            optional: true
+          - name: frequency_penalty
+            optional: true
+          - name: presence_penalty
+            optional: true
+          - name: temperature
+            optional: true
+          - name: top_p
+            optional: true
+          - name: stop
+            optional: true
+          - name: response_format
+            optional: true
+          - name: extra_body
+            optional: true
+          name: generation_kwargs
+        - description: Whether to use the `offline_batch_generate` method to generate
+            the responses.
+          name: use_offline_batch_generation
+          optional: true
+        - description: If provided, then polling will be done until the `ofline_batch_generate`
+            method is able to retrieve the results. The value indicate the time to
+            wait between each polling.
+          name: offline_batch_generation_block_until_done
+          optional: true
+        - description: The base URL to use for the OpenAI API requests.
+          name: base_url
+          optional: true
+        - description: The API key to authenticate the requests to the OpenAI API.
+          name: api_key
+          optional: true
+        - description: The default headers to use for the OpenAI API requests.
+          name: default_headers
+          optional: true
+        - description: The maximum number of times to retry the request to the API
+            before failing.
+          name: max_retries
+          optional: true
+        - description: The maximum time in seconds to wait for a response from the
+            API.
+          name: timeout
+          optional: true
+        - description: The structured output format to use across all the generations.
+          name: structured_output
+          optional: true
+      - description: Whether to include the raw output of the LLM in the key `raw_output_<TASK_NAME>`
+          of the `distilabel_metadata` dictionary output column
+        name: add_raw_output
+        optional: true
+      - description: Whether to include the raw input of the LLM in the key `raw_input_<TASK_NAME>`
+          of the `distilabel_metadata` dictionary column
+        name: add_raw_input
+        optional: true
+      - description: The number of generations to be produced per input.
+        name: num_generations
+        optional: true
+      system_prompt: null
+      template: '{{ instruction }}'
+      type_info:
+        module: distilabel.steps.tasks.text_generation
+        name: TextGeneration
+      use_cache: true
+      use_default_structured_output: false
+      use_system_prompt: true
+  - name: load_data_from_hub_0
+    step:
+      batch_size: 64000
+      config: null
+      input_mappings: {}
+      name: load_data_from_hub_0
+      num_examples: 3
+      output_mappings: {}
+      repo_id: default_name
+      resources:
+        cpus: null
+        gpus: null
+        memory: null
+        replicas: 1
+        resources: null
+      revision: null
+      runtime_parameters_info:
+      - name: resources
+        runtime_parameters_info:
+        - description: The number of replicas for the step.
+          name: replicas
+          optional: true
+        - description: The number of CPUs assigned to each step replica.
+          name: cpus
+          optional: true
+        - description: The number of GPUs assigned to each step replica.
+          name: gpus
+          optional: true
+        - description: The memory in bytes required for each step replica.
+          name: memory
+          optional: true
+        - description: A dictionary containing names of custom resources and the number
+            of those resources required for each step replica.
+          name: resources
+          optional: true
+      - description: The number of rows that will contain the batches generated by
+          the step.
+        name: batch_size
+        optional: true
+      - description: The Hugging Face Hub repository ID of the dataset to load.
+        name: repo_id
+        optional: false
+      - description: The split of the dataset to load. Defaults to 'train'.
+        name: split
+        optional: true
+      - description: The configuration of the dataset to load. This is optional and
+          only needed if the dataset has multiple configurations.
+        name: config
+        optional: true
+      - description: The revision of the dataset to load. Defaults to the latest revision.
+        name: revision
+        optional: true
+      - description: Whether to load the dataset in streaming mode or not. Defaults
+          to False.
+        name: streaming
+        optional: true
+      - description: The number of examples to load from the dataset. By default will
+          load all examples.
+        name: num_examples
+        optional: true
+      split: train
+      storage_options: null
+      streaming: false
+      type_info:
+        module: distilabel.steps.generators.huggingface
+        name: LoadDataFromHub
+      use_cache: true
+  type_info:
+    module: distilabel.pipeline.local
+    name: Pipeline
+requirements: []
