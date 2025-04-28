@@ -129,10 +129,11 @@ async def async_distill_data(
     args.timeout = timeout
     args.hf_output_dataset = hf_output_dataset
 
-    uid = uuid.uuid4()
+    # uid = uuid.uuid4()
 
     task_id = args.task_id
-    if task_id == "":
+    print("task_id:", task_id)
+    if task_id == "" or task_id is None:
         task_id = uuid.uuid4()
 
     # 判断task_id是否存在
@@ -142,7 +143,7 @@ async def async_distill_data(
 
     try:
         # 将文件保存
-        dir_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{uid}"
+        dir_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{task_id}"
         distill_data_path = dir_path
         distilled_data_path = os.path.join(dir_path, "distilled")
         tmp_path = os.path.join(dir_path, str("tmp_" + args.file.filename))
@@ -242,7 +243,7 @@ async def async_sft_distilled(
         task_id: str = Form(description="生成蒸馏数据返回的uid"),
 ):
     try:
-        dir_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{uid}"
+        dir_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{task_id}"
         accelerate_configs_file_content = await accelerate_configs_file.read()  # 读取 accelerate 配置文件
         sft_configs_file_content = await sft_configs_file.read()  # 读取 sft 配置文件
         with open(os.path.join(dir_path, "accelerate_configs.yaml"), "wb") as f:
@@ -267,7 +268,7 @@ async def async_sft_distilled(
     try:
         sft_task_dict[task_id] = {"time": time.time(), "code": 2, "msg": ""}
         system_cmd_str = f'accelerate launch --config_file {str(os.path.join(dir_path, "accelerate_configs.yaml"))} {os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], "third_party_tools", "open-r1/src/open_r1/sft.py")} --config {str(os.path.join(dir_path, "sft_configs.yaml"))}'
-        thr = Process(target=distilled_sft, args=(system_cmd_str, data["output_dir"]))
+        thr = Process(target=distilled_sft, args=(system_cmd_str, task_id, data["output_dir"]))
         thr.daemon = True
         threads_list.append(thr)
         thr.start()

@@ -176,16 +176,16 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
 
     try:
 
-        _url = os.environ.get("DATA_URL", "http://127.0.0.1:8018/test")
+        _distill_url = os.environ.get("_DISTILL_URL", "http://127.0.0.1:8018/test")
         data = {
             "task_id": args.task_id,
             "distilled_data_path": args.hf_output_dataset
         }
-        req = requests.post(_url, json=json.dumps(data))
+        req = requests.post(_distill_url, json=json.dumps(data))
         if req.status_code == 200:
             logger.info("调用成功")
         else:
-            raise f"Connection {_url} failed."
+            raise f"Connection {_distill_url} failed."
 
     except Exception as e:
         del task_dict[args.task_id]
@@ -194,7 +194,7 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
         raise DataDistillationError(e)
 
 
-def distilled_sft(system_cmd_str, output_dir):
+def distilled_sft(system_cmd_str, task_id, output_dir):
     try:
         logger.info(system_cmd_str)
         os.system(system_cmd_str)
@@ -203,9 +203,15 @@ def distilled_sft(system_cmd_str, output_dir):
 
     try:
         # 调用接口，返回模型路径
-        data = {}
-        req = requests.post("", json=data)
+        data = {
+            "task_id": task_id,
+            "sft_model_path": output_dir
+        }
+        _sft_url = os.environ.get("_SFT_URL", "http://127.0.0.1:8018/test")
+        req = requests.post(_sft_url, json=json.dumps(data))
         if req.status_code == 200:
             logger.info(f"sft completed. model be saved {output_dir}")
+        else:
+            raise f"Connection {_sft_url} failed."
     except Exception as e:
         logger.info(e)

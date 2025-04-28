@@ -1,5 +1,5 @@
 # Model arguments
-model_name_or_path: /data/nfs_data/models/Qwen/Qwen2.5-0.5B-Instruct
+model_name_or_path: /nfs_data/models/Qwen/Qwen2.5-0.5B-Instruct
 model_revision: main
 torch_dtype: bfloat16
 #attn_implementation: sdpa
