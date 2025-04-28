@@ -7,6 +7,7 @@ class RequestModel(BaseModel):
 
 class GenerationRequestModel(BaseModel):
     file: UploadFile = File(description="一个二进制文件"),
+    task_id: str = Field(description="Field"),
     hf_dataset: str = Field("123", example="")
     hf_dataset_config: str = Field("", example="")
     hf_dataset_split: str = Field("train", example="")
@@ -42,4 +43,5 @@ openar1_router = APIRouter()
 
 # utils_api
 from server.utils_api import upload_file
-from server.distill_api import distill_data, sft_distilled
+from server.distill_api import sft_distilled
+# from server.distill_api import distill_data, sft_distilled

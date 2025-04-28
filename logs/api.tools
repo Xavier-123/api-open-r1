@@ -40,3 +40,47 @@
 [2025-04-25 10:19:59,342]-[F:\inspur\GPU\code\api-open-r1\main.py:18]-[ERROR] {'isSuc': False, 'code': 2, 'msg': "Data distillation error! Dataset.save_to_disk() got an unexpected keyword argument 'distiset_path'", 'res': {}}
 [2025-04-25 10:37:15,510]-[F:\inspur\GPU\code\api-open-r1\main.py:18]-[ERROR] {'isSuc': False, 'code': 2, 'msg': "Data distillation error! Dataset.save_to_disk() got an unexpected keyword argument 'distiset_path'", 'res': {}}
 [2025-04-25 10:41:08,663]-[F:\inspur\GPU\code\api-open-r1\main.py:18]-[ERROR] {'isSuc': False, 'code': 2, 'msg': 'Data distillation error! "Column data not in the dataset. Current columns in the dataset: [\'problem\', \'text\', \'generation\', \'model_name\', \'distilabel_metadata\']"', 'res': {}}
+[2025-04-27 17:22:13,352]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:164]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:25:22,532]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:164]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:27:32,175]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:160]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:29:52,183]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-27 17:29:52,186]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:169]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:29:57,411]-[F:\inspur\GPU\api-open-r1\tools\distill.py:155]-[INFO] data to distill success.
+[2025-04-27 17:37:00,130]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-27 17:37:00,131]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:169]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:37:00,901]-[F:\inspur\GPU\api-open-r1\tools\distill.py:155]-[INFO] data to distill success.
+[2025-04-27 17:46:44,367]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-27 17:46:44,370]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:183]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:46:44,855]-[F:\inspur\GPU\api-open-r1\tools\distill.py:155]-[INFO] data to distill success.
+[2025-04-27 17:49:29,614]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-27 17:49:33,832]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:170]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-27 17:49:34,272]-[F:\inspur\GPU\api-open-r1\tools\distill.py:155]-[INFO] data to distill success.
+[2025-04-27 17:50:05,114]-[F:\inspur\GPU\api-open-r1\tools\distill.py:164]-[INFO] distilled success.
+[2025-04-28 09:52:22,488]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-28 09:52:30,488]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:173]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-28 09:52:31,363]-[F:\inspur\GPU\api-open-r1\tools\distill.py:157]-[INFO] data to distill success.
+[2025-04-28 09:53:02,121]-[F:\inspur\GPU\api-open-r1\tools\distill.py:169]-[INFO] distilled success.
+[2025-04-28 09:55:00,255]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-28 09:55:09,152]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:173]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-28 09:55:09,852]-[F:\inspur\GPU\api-open-r1\tools\distill.py:158]-[INFO] data to distill success.
+[2025-04-28 09:55:41,133]-[F:\inspur\GPU\api-open-r1\tools\distill.py:170]-[INFO] distilled success.
+[2025-04-28 09:58:33,780]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-28 09:58:41,617]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:173]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-28 09:58:42,170]-[F:\inspur\GPU\api-open-r1\tools\distill.py:158]-[INFO] data to distill success.
+[2025-04-28 10:01:30,179]-[F:\inspur\GPU\api-open-r1\tools\distill.py:170]-[INFO] distilled success.
+[2025-04-28 10:01:35,317]-[F:\inspur\GPU\api-open-r1\tools\distill.py:186]-[INFO] 调用成功
+[2025-04-28 10:04:27,382]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:155]-[INFO] data save success.
+[2025-04-28 10:04:35,737]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:173]-[INFO] >>> task_id:1234567890, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '1234567890'}}
+[2025-04-28 10:04:39,226]-[F:\inspur\GPU\api-open-r1\tools\distill.py:158]-[INFO] data to distill success.
+[2025-04-28 10:18:48,378]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:154]-[INFO] data save success.
+[2025-04-28 10:18:58,570]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:172]-[INFO] >>> task_id:22222, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '22222'}}
+[2025-04-28 10:19:09,614]-[F:\inspur\GPU\api-open-r1\tools\distill.py:158]-[INFO] data to distill success.
+[2025-04-28 10:20:15,023]-[F:\inspur\GPU\api-open-r1\tools\distill.py:170]-[INFO] distilled success.
+[2025-04-28 10:20:16,193]-[F:\inspur\GPU\api-open-r1\tools\distill.py:186]-[INFO] 调用成功
+[2025-04-28 10:20:54,031]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:154]-[INFO] data save success.
+[2025-04-28 10:21:03,953]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:172]-[INFO] >>> task_id:222223, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '222223'}}
+[2025-04-28 10:21:31,594]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:154]-[INFO] data save success.
+[2025-04-28 10:21:39,967]-[F:\inspur\GPU\api-open-r1\server\distill_api.py:172]-[INFO] >>> task_id:222223, response:{'isSuc': True, 'code': 2, 'msg': '任务已开启~', 'res': {'task_id': '222223'}}
+[2025-04-28 10:21:47,978]-[F:\inspur\GPU\api-open-r1\tools\distill.py:158]-[INFO] data to distill success.
+[2025-04-28 10:23:42,834]-[F:\inspur\GPU\api-open-r1\tools\distill.py:170]-[INFO] distilled success.
+[2025-04-28 10:23:45,265]-[F:\inspur\GPU\api-open-r1\tools\distill.py:186]-[INFO] 调用成功
