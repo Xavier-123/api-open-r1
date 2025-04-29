@@ -39,9 +39,9 @@ class ResponseModel(BaseModel):
 
 # 路由
 utils_router = APIRouter()
-openar1_router = APIRouter()
+openr1_router = APIRouter()
 
 # utils_api
 from server.utils_api import upload_file
-from server.distill_api import sft_distilled
+from server.openr1_api import async_sft_distilled, async_grpo, async_distill_data
 # from server.distill_api import distill_data, sft_distilled

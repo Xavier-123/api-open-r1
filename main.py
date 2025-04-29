@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, Form, status, Body
 from fastapi.responses import JSONResponse
-from server.router import utils_router, openar1_router
+from server.router import utils_router, openr1_router
 from tools.error_define import CustomError
 from tools.log import logger
 import os
@@ -10,7 +10,7 @@ os.environ["WANDB_DISABLED"] = "true"
 
 app = FastAPI(title='my api', version='v1.0')
 app.include_router(utils_router, prefix="")
-app.include_router(openar1_router, prefix="")
+app.include_router(openr1_router, prefix="")
 
 
 # 自定义错误
