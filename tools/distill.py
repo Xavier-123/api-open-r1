@@ -1,5 +1,7 @@
 import os
 import json
+import time
+import subprocess
 import pandas as pd
 import requests
 import datasets
@@ -54,6 +56,7 @@ def build_distilabel_pipeline(
         )
 
     return pipeline
+
 
 def excel_2_arrow(data_path, distill_path):
     '''excel 转蒸馏需要的格式'''
@@ -141,8 +144,9 @@ def distill(args):
     for i in range(dataset.shape[0]):
         print(dataset[i])
 
+
 def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
-# async def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path):
+    # async def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path):
     # # 将数据保存到本地
     # try:
     #     file_content = await args.file.read()  # 读取上传文件的内容
@@ -183,7 +187,7 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
         }
         req = requests.post(_url, json=json.dumps(data))
         if req.status_code == 200:
-            logger.info("调用成功")
+            logger.info(f"数据蒸馏完成, data be saved {args.hf_output_dataset}")
         else:
             raise f"Connection {_url} failed."
 
@@ -194,25 +198,48 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
         raise DataDistillationError(e)
 
 
-def distilled_sft(system_cmd_str, task_id, output_dir):
+def distilled_sft(system_cmd_str_list, task_id, output_dir, sft_task_dict):
     try:
-        logger.info(system_cmd_str)
-        os.system(system_cmd_str)
+        logger.info(system_cmd_str_list)
+        result = subprocess.run(system_cmd_str_list, capture_output=True, text=True)
+        if result.returncode == 0:
+            logger.info(f"成功！输出：{result.stdout}")
+        else:
+            logger.info(f"失败！输出：{result.stderr}")
+            sft_task_dict[task_id]["time"] = time.time()
+            sft_task_dict[task_id]["code"] = -1
+            sft_task_dict[task_id]["msg"] = result.stderr
+
     except Exception as e:
         logger.info(e)
+        sft_task_dict[task_id]["time"] = time.time()
+        sft_task_dict[task_id]["code"] = -1
+        sft_task_dict[task_id]["msg"] = "失败"
 
     try:
         # 调用接口，返回模型路径
         data = {
             "task_id": task_id,
-            "sft_model_path": output_dir
+            "sft_model_path": output_dir,
+            "code": 0,
+            "msg": "",
         }
-        _url = os.environ.get("_SFT_URL", "http://127.0.0.1:8018/test")
-        req = requests.post(_url, json=json.dumps(data))
-        if req.status_code == 200:
-            logger.info(f"sft completed. model be saved {output_dir}")
+        _url = os.environ.get("CALLBACK_URL", "http://127.0.0.1:8018/test")
+
+        # 判断训练结果，返回不同状态码
+        if sft_task_dict[task_id]["code"] == 0:
+            data["code"] = 0
         else:
-            raise f"Connection {_url} failed."
+            data["code"] = -1
+            data["msg"] = sft_task_dict[task_id]["msg"]
+        req = requests.post(_url, json=json.dumps(data))
+
+        if req.status_code == 200 and data["code"] == 0:
+            logger.info(f"sft completed. sft model be saved {output_dir}")
+        elif req.status_code != 200 and data["code"] == 0:
+            logger.info(f"Connection {_url} failed.")
+        else:
+            logger.info(f"task_id: {task_id}, distilled data failed.")
     except Exception as e:
         logger.info(e)
 
@@ -233,7 +260,7 @@ def _grpo(system_cmd_grpo, task_id, output_dir):
         _url = os.environ.get("_GRPO_URL", "http://127.0.0.1:8018/test")
         req = requests.post(_url, json=json.dumps(data))
         if req.status_code == 200:
-            logger.info(f"grpo completed. model be saved {output_dir}")
+            logger.info(f"GRPO completed. GRPO model be saved {output_dir}")
         else:
             raise f"Connection {_url} failed."
     except Exception as e:

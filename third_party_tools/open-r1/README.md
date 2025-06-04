@@ -104,7 +104,7 @@ We support training models with either DDP or DeepSpeed (ZeRO-2 and ZeRO-3). For
 
 ```shell
 # Train via command line
-accelerate launch --config_file=recipes/accelerate_configs/zero3.yaml src/open_r1/sft.py \
+accelerate launch --config_file=recipes/accelerate_configs/ddp.yaml src/open_r1/sft.py \
     --model_name_or_path Qwen/Qwen2.5-1.5B-Instruct \
     --dataset_name open-r1/OpenR1-Math-220k \
     --learning_rate 1.0e-5 \
@@ -117,7 +117,7 @@ accelerate launch --config_file=recipes/accelerate_configs/zero3.yaml src/open_r
     --output_dir data/Qwen2.5-1.5B-Open-R1-Distill
 
 # Train via YAML config
-accelerate launch --config_file recipes/accelerate_configs/zero3.yaml src/open_r1/sft.py \
+accelerate launch --config_file recipes/accelerate_configs/ddp.yaml src/open_r1/sft.py \
     --config recipes/Qwen2.5-1.5B-Instruct/sft/config_demo.yaml
 ```
 
@@ -133,7 +133,7 @@ By default, these scripts will push each model to your Hugging Face Hub username
 
 ```shell
 # Change batch size, number of epochs etc
-accelerate launch --config_file recipes/accelerate_configs/zero3.yaml src/open_r1/sft.py \
+accelerate launch --config_file recipes/accelerate_configs/ddp.yaml src/open_r1/sft.py \
     --config recipes/Qwen2.5-1.5B-Instruct/sft/config_demo.yaml
     --per_device_train_batch_size=1 --num_train_epochs=5
 ```
@@ -141,7 +141,7 @@ accelerate launch --config_file recipes/accelerate_configs/zero3.yaml src/open_r
 If you also wish to override the Weights and Biases default settings, you can do so as follows:
 
 ```shell
-accelerate launch --config_file recipes/accelerate_configs/zero3.yaml src/open_r1/sft.py \
+accelerate launch --config_file recipes/accelerate_configs/ddp.yaml src/open_r1/sft.py \
     --config recipes/Qwen2.5-1.5B-Instruct/sft/config_demo.yaml
     --wandb_entity huggingface --wandb_project open-r1 --run_name Qwen2.5-1.5B-GRPO
 ```
@@ -154,7 +154,7 @@ accelerate launch --config_file recipes/accelerate_configs/zero3.yaml src/open_r
 To run SFT on a dataset distilled from DeepSeek-R1 with reasoning traces such as [open-r1/OpenR1-Math-220k](https://huggingface.co/datasets/open-r1/OpenR1-Math-220k), run:
 
 ```shell
-ACCELERATE_LOG_LEVEL=info accelerate launch --config_file recipes/accelerate_configs/zero3.yaml \
+ACCELERATE_LOG_LEVEL=info accelerate launch --config_file recipes/accelerate_configs/ddp.yaml \
     src/open_r1/sft.py \
     --config recipes/Qwen2.5-1.5B-Instruct/sft/config_demo.yaml
 ```

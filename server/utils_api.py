@@ -37,10 +37,32 @@ async def upload_file(
     tmp_path = saved_path + ".tmp"
     try:
         file_content = await file.read()  # 读取上传文件的内容
-        # if os.path.exists(tmp_path) and os.path.getsize(tmp_path) == len(file_content):
-        #     file_status = f"文件 {file.filename} 已存在。"
-        #     content = {"isSuc": True, "code": 0, "msg": file_status, "res": {}}
-        #     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+        with open(tmp_path, "wb") as f:
+            f.write(file_content)
+
+        # 转为蒸馏前格式
+        excel_2_arrow(data_path=tmp_path)
+
+
+    except Exception as e:
+        raise BinaryDecodingError(e)
+    content = {"isSuc": True, "code": 0, "msg": "Success ~", "res": {"uid": uid}}
+    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+
+
+'''上传数据集'''
+@utils_router.post(path="/upload_datasets", summary="bytes", response_model=ResponseModel, tags=["上传文件"])
+async def upload_file(
+        file: UploadFile = File(description="excel、csv或jsonl文件"),
+):
+    # 验证文件
+    uid = uuid.uuid4()
+
+    # 将文件保存
+    saved_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{uid}/{file.filename}"
+    tmp_path = saved_path + ".tmp"
+    try:
+        file_content = await file.read()  # 读取上传文件的内容
         with open(tmp_path, "wb") as f:
             f.write(file_content)
 

@@ -18,7 +18,7 @@ Supervised fine-tuning script for decoder language models.
 Usage:
 
 # One 1 node of 8 x H100s
-accelerate launch --config_file=recipes/accelerate_configs/zero3.yaml src/open_r1/sft.py \
+accelerate launch --config_file=recipes/accelerate_configs/ddp.yaml src/open_r1/sft.py \
     --model_name_or_path Qwen/Qwen2.5-1.5B-Instruct \
     --dataset_name HuggingFaceH4/Bespoke-Stratos-17k \
     --learning_rate 2.0e-5 \
