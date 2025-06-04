@@ -80,25 +80,25 @@ def qwen_template(data):
 
 
 def distill(args):
-    print("\nRunning with arguments:")
+    logger.info("\nRunning with arguments:")
     for arg, value in vars(args).items():
         print(f"  {arg}: {value}")
     print()
 
-    print(f"Loading '{args.hf_dataset}' (config: {args.hf_dataset_config}, split: {args.hf_dataset_split}) dataset...")
+    logger.info(f"Loading '{args.hf_dataset}' (config: {args.hf_dataset_config}, split: {args.hf_dataset_split}) dataset...")
     try:
         dataset = datasets.load_from_disk(args.hf_dataset)
         if "train" in dataset:
             dataset = dataset["train"]
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         # dataset = load_dataset(r"F:\inspur\GPU\code\open-r1\open-r1\datasets\da-test", args.hf_dataset_config, split=args.hf_dataset_split)
         dataset = load_dataset(args.hf_dataset, args.hf_dataset_config, split=args.hf_dataset_split)
-    print("Dataset loaded!")
+    logger.info("Dataset loaded!")
 
-    print("dataset:")
-    print(dataset)
+    logger.info("dataset:")
+    logger.info(dataset)
 
     pipeline = build_distilabel_pipeline(
         model=args.model,
@@ -115,34 +115,34 @@ def distill(args):
         retries=args.retries,
     )
 
-    print("Running generation pipeline...")
+    logger.info("Running generation pipeline...")
     distiset = pipeline.run(
         dataset=dataset,
         dataset_batch_size=args.input_batch_size * 1000,
         use_cache=False,
     )
-    print("Generation pipeline finished!")
+    logger.info("Generation pipeline finished!")
 
     # distilled to sft
     dataset = distiset["default"]["train"].map(qwen_template)
 
     #
     if args.hf_output_dataset:
-        print(f"Pushing resulting dataset to '{args.hf_output_dataset}'...")
+        logger.info(f"Pushing resulting dataset to '{args.hf_output_dataset}'...")
         dataset.save_to_disk(args.hf_output_dataset)
-        print(dataset)
-        print("distilled data saved!")
+        logger.info(dataset)
+        logger.info("distilled data saved!")
 
     try:
         dataset = load_from_disk(dataset_path=args.hf_output_dataset)
     except Exception as e:
-        print(f"{e}")
+        logger.info(f"{e}")
         dataset = load_dataset(path=args.hf_output_dataset)
 
-    print("distilled dataset:")
+    logger.info("distilled dataset:")
     # print(dataset)
     for i in range(dataset.shape[0]):
-        print(dataset[i])
+        logger.info(dataset[i])
 
 
 def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
@@ -159,7 +159,7 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
     # 转为蒸馏前格式
     try:
         excel_2_arrow(tmp_path, distill_data_path)
-        logger.info("data to distill success.")
+        logger.info("excel to arrow Format conversion successful.")
     except Exception as e:
         del task_dict[args.task_id]
         os.remove(distill_data_path)
@@ -180,7 +180,7 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
 
     try:
 
-        _url = os.environ.get("_DISTILL_URL", "http://127.0.0.1:8018/test")
+        _url = os.environ.get("CALLBACK_URL", "http://127.0.0.1:8018/test")
         data = {
             "task_id": args.task_id,
             "distilled_data_path": args.hf_output_dataset

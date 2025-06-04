@@ -1,9 +1,8 @@
-import json
-import os
-
-import requests
+import os.path
+from zipfile import ZipFile
+import io
 import yaml
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import UploadFile, File, Form, status
 from multiprocessing import Process, Event
 from tools.error_define import BinaryDecodingError, FileConversionError, DataDistillationError
@@ -58,7 +57,7 @@ async def async_distill_data(
     args.timeout = timeout
     args.hf_output_dataset = hf_output_dataset
 
-    # uid = uuid.uuid4()
+    logger.info(args)
 
     task_id = args.task_id
     print("task_id:", task_id)
@@ -77,7 +76,6 @@ async def async_distill_data(
 
     try:
         # 将文件保存
-
         if not os.path.exists(distill_data_path):
             os.makedirs(distill_data_path)
         elif not os.path.exists(tmp_path):
@@ -94,13 +92,13 @@ async def async_distill_data(
 
         # 调用 distill 获取
         task_dict[task_id] = {"time": time.time(), "code": 2, "msg": ""}
-        # thr = Thread(target=openR1_distill, args=(args, tmp_path, distill_data_path, distilled_data_path, task_dict))
         thr = Process(target=openR1_distill, args=(args, tmp_path, distill_data_path, distilled_data_path, task_dict))
         thr.daemon = True
         threads_list.append(thr)
         thr.start()
 
-        content = {"isSuc": True, "code": 2, "msg": "任务已开启~", "res": {"task_id": task_id}}
+        content = {"isSuc": True, "code": 2, "msg": "任务已开启~",
+                   "res": {"task_id": task_id, "output_dataset": distilled_data_path}}
         logger.info(f">>> task_id:{task_id}, response:{content}")
 
         return JSONResponse(status_code=status.HTTP_200_OK, content=content)
@@ -117,6 +115,8 @@ async def async_distill_data(
 
 global sft_state
 '''使用蒸馏数据 SFT'''
+
+
 @openr1_router.post(path="/async_sft_distilled", response_model=ResponseModel, tags=["使用蒸馏数据 SFT"])
 async def async_sft_distilled(
         task_id: str = Form(description="生成蒸馏数据返回的uid"),
@@ -150,10 +150,12 @@ async def async_sft_distilled(
 
     # 开始微调
     try:
-        sft_task_dict[task_id] = {"time": time.time(), "code": 1, "msg": ""}    # 0 完成；-1 失败；1 开始
-        system_cmd_str_list = ["accelerate", "launch", "--config_file", os.path.abspath(os.getcwd()) + f"/file_save/fsdp.yaml",
-               os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], "third_party_tools", "open-r1/src/open_r1/sft.py"),
-               "--config", os.path.join(dir_path, "sft_configs.yaml")]
+        sft_task_dict[task_id] = {"time": time.time(), "code": 1, "msg": ""}  # 0 完成；-1 失败；1 开始
+        system_cmd_str_list = ["accelerate", "launch", "--config_file",
+                               os.path.abspath(os.getcwd()) + f"/file_save/fsdp.yaml",
+                               os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0],
+                                            "third_party_tools", "open-r1/src/open_r1/sft.py"),
+                               "--config", os.path.join(dir_path, "sft_configs.yaml")]
         # system_cmd_str = f'accelerate launch --config_file {os.path.abspath(os.getcwd()) + f"/file_save/fsdp.yaml"} ' \
         #                  f'--main_training_function=nccl ' \
         #                  f'{os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], "third_party_tools", "open-r1/src/open_r1/sft.py")} ' \
@@ -246,6 +248,45 @@ async def async_grpo(
 
     content = {"isSuc": True, "code": 0, "msg": "Success ~", "res": {"task_id": task_id}}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+
+
+'''获取蒸馏数据'''
+
+@openr1_router.post(path="/get_data")
+async def get_data(
+        task_id: str = Form("1234", example=""),
+):
+    distilled_file_path = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}/distilled")
+    # 假设有以下文件路径
+    file_paths = os.listdir(distilled_file_path)
+
+    # 创建内存中的 ZIP 文件
+    zip_buffer = io.BytesIO()
+    with ZipFile(zip_buffer, "w") as zip_file:
+        for file_path in file_paths:
+            # 在 ZIP 文件中创建相对路径
+            start = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}")
+            arcname = os.path.relpath(os.path.join(distilled_file_path, file_path), start=start)
+            zip_file.write(os.path.join(distilled_file_path, file_path), arcname)  # 将文件添加到 ZIP
+
+    zip_buffer.seek(0)  # 将指针移回 ZIP 文件开头
+
+    # 返回 ZIP 文件流
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=files_{task_id}.zip"}
+    )
+
+
+'''获取微调模型'''
+
+
+@openr1_router.post(path="/get_data")
+async def get_data(
+        task_id: str = Form("1234", example=""),
+):
+    return
 
 
 @openr1_router.post(path="/test")

@@ -6,7 +6,7 @@ callback_url = os.environ.get("CALLBACK_URL", "")
 
 # 蒸馏数据参数
 file_path = os.environ.get("FILE_PATH", "")
-distilled_file_path = os.environ.get("DISTILLED_FILE_PATH", "")
+output_dataset = os.environ.get("OUTPUT_DATASET", "")
 
 
 # sft训练参数
