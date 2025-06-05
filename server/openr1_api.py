@@ -19,34 +19,32 @@ sft_task_dict = {}
 grpo_task_dict = {}
 threads_list = []
 
-'''蒸馏数据'''
+
 
 
 @openr1_router.post(path="/async_distill_data", response_model=ResponseModel, tags=["蒸馏数据"])
 async def async_distill_data(
         file: UploadFile = File(description="一个二进制文件"),
         task_id: str = Form("1234567890"),
-        hf_dataset: str = Form("1.txt", example=""),
         prompt_column: str = Form("problem", example=""),
-        prompt_template: str = Form("{{ instruction }}", example=""),
         model: str = Form("", example=""),
         vllm_server_url: str = Form("http://localhost:8000/v1", example=""),
         temperature: float = Form(0.1, example=0.1),
         top_p: float = Form(0.9, example=0.9),
         max_new_tokens: int = Form(8192, example=8192),
-        num_generations: int = Form(1, example=1),
-        input_batch_size: int = Form(64, example=64),
+        num_generations: int = Form(1, example=1, description="每个样本生成几个回答"),
+        input_batch_size: int = Form(8, example=8),
         timeout: int = Form(600, example=600),
         hf_output_dataset: str = Form("", example="")
 ):
-    '''异步接口'''
+    '''蒸馏数据'''
     # 验证文件
     args = GenerationRequestModel()
     args.file = file
     args.task_id = task_id
-    args.hf_dataset = hf_dataset
+    args.hf_dataset = "1.txt"
     args.prompt_column = prompt_column
-    args.prompt_template = prompt_template
+    args.prompt_template = "{{ instruction }}"
     args.model = model
     args.vllm_server_url = vllm_server_url
     args.temperature = temperature
@@ -113,14 +111,13 @@ async def async_distill_data(
         return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
-global sft_state
-'''使用蒸馏数据 SFT'''
 
 
 @openr1_router.post(path="/async_sft_distilled", response_model=ResponseModel, tags=["使用蒸馏数据 SFT"])
 async def async_sft_distilled(
         task_id: str = Form(description="生成蒸馏数据返回的uid"),
 ):
+    '''使用蒸馏数据 SFT'''
     try:
         # 判断任务是否存在
         if task_id in sft_task_dict:
@@ -250,12 +247,13 @@ async def async_grpo(
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
-'''获取蒸馏数据'''
 
 @openr1_router.post(path="/get_data")
 async def get_data(
         task_id: str = Form("1234", example=""),
+        task_type: str = Form("data", example=""),   # data/model
 ):
+    '''获取蒸馏数据'''
     distilled_file_path = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}/distilled")
     # 假设有以下文件路径
     file_paths = os.listdir(distilled_file_path)
@@ -277,16 +275,6 @@ async def get_data(
         media_type="application/zip",
         headers={"Content-Disposition": f"attachment; filename=files_{task_id}.zip"}
     )
-
-
-'''获取微调模型'''
-
-
-@openr1_router.post(path="/get_data")
-async def get_data(
-        task_id: str = Form("1234", example=""),
-):
-    return
 
 
 @openr1_router.post(path="/test")

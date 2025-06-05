@@ -68,7 +68,7 @@ async def upload_file(
 
         # 转为蒸馏前格式
         excel_2_arrow(data_path=tmp_path)
-
+        os.remove(tmp_path)
 
     except Exception as e:
         raise BinaryDecodingError(e)

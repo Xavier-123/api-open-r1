@@ -146,18 +146,12 @@ def distill(args):
 
 
 def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
-    # async def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path):
-    # # 将数据保存到本地
-    # try:
-    #     file_content = await args.file.read()  # 读取上传文件的内容
-    #     with open(tmp_path, "wb") as f:
-    #         f.write(file_content)
-    #     logger.info("data save success.")
-    # except Exception as e:
-    #     raise BinaryDecodingError(e)
 
     # 转为蒸馏前格式
     try:
+        # if args.file:
+        #     pass
+        # 将excel转换为dataset格式
         excel_2_arrow(tmp_path, distill_data_path)
         logger.info("excel to arrow Format conversion successful.")
     except Exception as e:
