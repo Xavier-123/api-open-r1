@@ -35,7 +35,8 @@ async def async_distill_data(
         num_generations: int = Form(1, example=1, description="每个样本生成几个回答"),
         input_batch_size: int = Form(8, example=8),
         timeout: int = Form(600, example=600),
-        hf_output_dataset: str = Form("", example="")
+        hf_output_dataset: str = Form("", example=""),
+        split_train_test: float = Form(1, example=0.7),
 ):
     '''蒸馏数据'''
     # 验证文件
@@ -54,7 +55,7 @@ async def async_distill_data(
     args.input_batch_size = input_batch_size
     args.timeout = timeout
     args.hf_output_dataset = hf_output_dataset
-
+    args.split_train_test = split_train_test
     logger.info(args)
 
     task_id = args.task_id
@@ -75,16 +76,13 @@ async def async_distill_data(
     try:
         # 将文件保存
         if not os.path.exists(distill_data_path):
-            os.makedirs(distill_data_path)
-        elif not os.path.exists(tmp_path):
-            os.makedirs(tmp_path)
+            os.makedirs(distill_data_path, exist_ok=True)
 
         # 将数据保存到本地
         try:
             file_content = await args.file.read()  # 读取上传文件的内容
             with open(tmp_path, "wb") as f:
                 f.write(file_content)
-            logger.info("data save success.")
         except Exception as e:
             raise BinaryDecodingError(e)
 
@@ -109,7 +107,6 @@ async def async_distill_data(
             os.remove(tmp_path)
         content = {"isSuc": False, "code": -1, "msg": str(e), "res": {}}
         return JSONResponse(status_code=status.HTTP_200_OK, content=content)
-
 
 
 

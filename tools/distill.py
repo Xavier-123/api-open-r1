@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 import datasets
 from typing import Optional
-from datasets import Dataset, load_from_disk, load_dataset
+from datasets import Dataset, load_from_disk, load_dataset, DatasetDict
 from distilabel.llms import OpenAILLM
 from distilabel.pipeline import Pipeline
 from distilabel.steps import StepResources
@@ -58,18 +58,45 @@ def build_distilabel_pipeline(
     return pipeline
 
 
-def excel_2_arrow(data_path, distill_path):
+def excel_2_arrow(data_path, distill_path, args):
     '''excel 转蒸馏需要的格式'''
     data = pd.read_excel(data_path)
 
-    data_list = []
-    for i in range(data.shape[0]):
-        data_list.append({
-            "problem": data.iloc[i, 0],
-            "text": data.iloc[i, 1] if data.iloc[i, 1] is not None else "",
+    # 随机打乱数据
+    df = data.sample(frac=1, random_state=42).reset_index(drop=True)
+
+    # 计算分割点
+    split_idx = int(len(df) * args.split_train_test)
+
+    # 划分训练集和测试集
+    train_set = df.iloc[:split_idx]
+    test_set = df.iloc[split_idx:]
+
+    train_list, test_list = [], []
+    for i in range(train_set.shape[0]):
+        train_list.append({
+            "problem": train_set.iloc[i, 0],
+            "text": train_set.iloc[i, 1] if train_set.iloc[i, 1] is not None else "",
         })
 
-    da = Dataset.from_list(data_list)
+    for i in range(test_set.shape[0]):
+        test_list.append({
+            "problem": test_set.iloc[i, 0],
+            "text": test_set.iloc[i, 1] if test_set.iloc[i, 1] is not None else "",
+        })
+
+    # 合并为DatasetDict
+    train_dataset = Dataset.from_list(train_list)
+    test_dataset = Dataset.from_list(test_list)
+    if args.split_train_test == 1:
+        da = DatasetDict({
+            "train": train_dataset,
+        })
+    else:
+        da = DatasetDict({
+            "train": train_dataset,
+            "test": test_dataset
+        })
     da.save_to_disk(distill_path)
 
 
@@ -88,15 +115,11 @@ def distill(args):
     logger.info(f"Loading '{args.hf_dataset}' (config: {args.hf_dataset_config}, split: {args.hf_dataset_split}) dataset...")
     try:
         dataset = datasets.load_from_disk(args.hf_dataset)
-        if "train" in dataset:
-            dataset = dataset["train"]
 
     except Exception as e:
         logger.info(e)
-        # dataset = load_dataset(r"F:\inspur\GPU\code\open-r1\open-r1\datasets\da-test", args.hf_dataset_config, split=args.hf_dataset_split)
         dataset = load_dataset(args.hf_dataset, args.hf_dataset_config, split=args.hf_dataset_split)
     logger.info("Dataset loaded!")
-
     logger.info("dataset:")
     logger.info(dataset)
 
@@ -114,25 +137,58 @@ def distill(args):
         timeout=args.timeout,
         retries=args.retries,
     )
-
     logger.info("Running generation pipeline...")
-    distiset = pipeline.run(
-        dataset=dataset,
+    distiset_train = pipeline.run(
+        dataset=dataset["train"],
         dataset_batch_size=args.input_batch_size * 1000,
         use_cache=False,
     )
+    train_dataset = distiset_train["default"]["train"].map(qwen_template)
+
+    if 0 < args.split_train_test < 1:
+        pipeline_test = build_distilabel_pipeline(
+            model=args.model,
+            base_url=args.vllm_server_url,
+            prompt_template=args.prompt_template,
+            prompt_column=args.prompt_column,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            max_new_tokens=args.max_new_tokens,
+            num_generations=args.num_generations,
+            input_batch_size=args.input_batch_size,
+            client_replicas=args.client_replicas,
+            timeout=args.timeout,
+            retries=args.retries,
+        )
+
+        distiset_test = pipeline_test.run(
+            dataset=dataset["test"],
+            dataset_batch_size=args.input_batch_size * 1000,
+            use_cache=False,
+        )
+        test_dataset = distiset_test["default"]["train"].map(qwen_template)
+
+        # 合并为DatasetDict
+        dataset = DatasetDict({
+            "train": train_dataset,
+            "test": test_dataset
+        })
+
+    else:
+        # 合并为DatasetDict
+        dataset = DatasetDict({
+            "train": train_dataset,
+        })
+
     logger.info("Generation pipeline finished!")
 
-    # distilled to sft
-    dataset = distiset["default"]["train"].map(qwen_template)
-
-    #
     if args.hf_output_dataset:
         logger.info(f"Pushing resulting dataset to '{args.hf_output_dataset}'...")
         dataset.save_to_disk(args.hf_output_dataset)
         logger.info(dataset)
         logger.info("distilled data saved!")
 
+    '''测试数据是否正常'''
     try:
         dataset = load_from_disk(dataset_path=args.hf_output_dataset)
     except Exception as e:
@@ -140,19 +196,18 @@ def distill(args):
         dataset = load_dataset(path=args.hf_output_dataset)
 
     logger.info("distilled dataset:")
-    # print(dataset)
-    for i in range(dataset.shape[0]):
-        logger.info(dataset[i])
+    logger.info(dataset)
+    # logger.info("distilled dataset:")
+    # if args.split_train_test == 1:
+    #     for i in range(dataset.shape[0]):
+    #         logger.info(dataset[i])
 
 
 def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
 
     # 转为蒸馏前格式
     try:
-        # if args.file:
-        #     pass
-        # 将excel转换为dataset格式
-        excel_2_arrow(tmp_path, distill_data_path)
+        excel_2_arrow(tmp_path, distill_data_path, args)
         logger.info("excel to arrow Format conversion successful.")
     except Exception as e:
         del task_dict[args.task_id]

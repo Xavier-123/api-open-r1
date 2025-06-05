@@ -57,6 +57,7 @@ async def upload_file(
 ):
     # 验证文件
     uid = uuid.uuid4()
+    msg = "Success ~"
 
     # 将文件保存
     saved_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{uid}/{file.filename}"
@@ -66,11 +67,37 @@ async def upload_file(
         with open(tmp_path, "wb") as f:
             f.write(file_content)
 
-        # 转为蒸馏前格式
-        excel_2_arrow(data_path=tmp_path)
+        # 获取文件类型
+        file_suffix = file.filename.split(".")[-1]
+        import pandas as pd
+        if file_suffix in ['xlsx']:
+            data = pd.read_excel(tmp_path)
+            data_list = []
+            for i in range(data.shape[0]):
+                data_list.append({
+                    "problem": data.iloc[i, 0],
+                    "text": data.iloc[i, 1] if data.iloc[i, 1] is not None else "",
+                    "generation": data.iloc[i, 2] if data.iloc[i, 2] is not None else "",
+                    "distilabel_metadata": data.iloc[i, 3] if data.iloc[i, 3] is not None else "",
+                })
+            da = Dataset.from_list(data_list)
+            # da.save_to_disk(data_path[:-4])
+            da.save_to_disk(saved_path)
+            for i in range(da.shape[0]):
+                print(da[i])
+
+
+        elif file_suffix in ['json', 'jsonl']:
+            data = pd.read_json(tmp_path)
+
+        elif file_suffix in ['csv']:
+            data = pd.read_csv(tmp_path)
+        else:
+            msg = f"Format {file_suffix} not supported."
         os.remove(tmp_path)
 
     except Exception as e:
+        msg = str(e)
         raise BinaryDecodingError(e)
-    content = {"isSuc": True, "code": 0, "msg": "Success ~", "res": {"uid": uid}}
+    content = {"isSuc": True, "code": 0, "msg": msg, "res": {"uid": uid}}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)

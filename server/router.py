@@ -25,6 +25,7 @@ class GenerationRequestModel(BaseModel):
     timeout: int = Field(600, example=600)
     retries: int = Field(0, example=0)
     hf_output_dataset: str = Field("", example="")
+    split_train_test: float = Field(1, example=0.9)
 
 
 class ResponseModel(BaseModel):
