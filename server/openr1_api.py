@@ -27,16 +27,17 @@ async def async_distill_data(
         file: UploadFile = File(description="一个二进制文件"),
         task_id: str = Form(default=""),
         prompt_column: str = Form("problem", example=""),
-        model: str = Form("", example=""),
         vllm_server_url: str = Form("http://localhost:8000/v1", example=""),
+        api_key: str = Form("", example=""),
+        model: str = Form("", example=""),
         temperature: float = Form(0.1, example=0.1),
         top_p: float = Form(0.9, example=0.9),
-        max_new_tokens: int = Form(8192, example=8192),
+        max_new_tokens: int = Form(1024, example=8192),
         num_generations: int = Form(1, example=1, description="每个样本生成几个回答"),
         input_batch_size: int = Form(8, example=8),
         timeout: int = Form(600, example=600),
         hf_output_dataset: str = Form("", example=""),
-        split_train_test: float = Form(1, example=0.7),
+        split_train_test: float = Form(1, example=0.7, description="0~1，表示训练数据占的比例"),
 ):
     logger.info(f"task_id: {task_id}, model: {model}, vllm_server_url: {vllm_server_url}")
 
@@ -50,6 +51,7 @@ async def async_distill_data(
     args.prompt_template = "{{ instruction }}"
     args.model = model
     args.vllm_server_url = vllm_server_url
+    args.api_key = api_key
     args.temperature = temperature
     args.top_p = top_p
     args.max_new_tokens = max_new_tokens

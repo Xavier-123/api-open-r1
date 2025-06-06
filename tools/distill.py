@@ -19,6 +19,7 @@ from tools.error_define import FileConversionError, DataDistillationError
 def build_distilabel_pipeline(
         model: str,
         base_url: str = "http://localhost:8000/v1",
+        api_key: str = "",
         prompt_column: Optional[str] = None,
         prompt_template: str = "{{ instruction }}",
         temperature: Optional[float] = None,
@@ -42,7 +43,8 @@ def build_distilabel_pipeline(
         TextGeneration(
             llm=OpenAILLM(
                 base_url=base_url,
-                api_key="something",
+                # api_key="something",
+                api_key=api_key if len(api_key) > 0 else "something",
                 model=model,
                 timeout=timeout,
                 max_retries=retries,
@@ -128,6 +130,7 @@ def distill(args):
     pipeline = build_distilabel_pipeline(
         model=args.model,
         base_url=args.vllm_server_url,
+        api_key=args.api_key,
         prompt_template=args.prompt_template,
         prompt_column=args.prompt_column,
         temperature=args.temperature,
@@ -151,6 +154,7 @@ def distill(args):
         pipeline_test = build_distilabel_pipeline(
             model=args.model,
             base_url=args.vllm_server_url,
+            api_key=args.api_key,
             prompt_template=args.prompt_template,
             prompt_column=args.prompt_column,
             temperature=args.temperature,

@@ -15,6 +15,7 @@ class GenerationRequestModel(BaseModel):
     prompt_template: str = Field("{{ instruction }}", example="")
     model: str = Field("", example="")
     vllm_server_url: str = Field("http://localhost:8000/v1", example="")
+    api_key: str = Field("")
     template: str = Field("qwen", example="qwen")
     temperature: float = Field(0.1, example=0.1)
     top_p: float = Field(0.9, example=0.9)
