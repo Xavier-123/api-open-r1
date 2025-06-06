@@ -8,7 +8,7 @@ from multiprocessing import Process, Event
 from tools.error_define import BinaryDecodingError, FileConversionError, DataDistillationError
 from tools.distill import openR1_distill, excel_2_arrow, distill, distilled_sft, _grpo
 from tools.log import logger
-from tools.envs import *
+# from tools.envs import *
 from server.router import openr1_router, ResponseModel, GenerationRequestModel
 import uuid
 import time
@@ -25,7 +25,7 @@ threads_list = []
 @openr1_router.post(path="/async_distill_data", response_model=ResponseModel, tags=["蒸馏数据"])
 async def async_distill_data(
         file: UploadFile = File(description="一个二进制文件"),
-        task_id: str = Form("1234567890"),
+        task_id: str = Form(default=""),
         prompt_column: str = Form("problem", example=""),
         model: str = Form("", example=""),
         vllm_server_url: str = Form("http://localhost:8000/v1", example=""),
@@ -38,6 +38,8 @@ async def async_distill_data(
         hf_output_dataset: str = Form("", example=""),
         split_train_test: float = Form(1, example=0.7),
 ):
+    logger.info(f"task_id: {task_id}, model: {model}, vllm_server_url: {vllm_server_url}")
+
     '''蒸馏数据'''
     # 验证文件
     args = GenerationRequestModel()
@@ -126,11 +128,11 @@ async def async_sft_distilled(
         os.makedirs(dir_path, exist_ok=True)
 
         # 更新 sft 微调参数
-        sft_configs_path = os.path.join(os.path.abspath(os.getcwd()), "file_save/sft-config_demo.yaml")
+        sft_configs_path = os.path.join(os.path.abspath(os.getcwd()), "file_save/sft_config_demo.yaml")
         with open(sft_configs_path, 'r') as f:
             data = yaml.safe_load(f)
-            if dataset_name and len(dataset_name) > 0:
-                data["dataset_name"] = dataset_name
+            if os.environ.get("DATASET_NAME") and len(os.environ.get("DATASET_NAME")) > 0:
+                data["dataset_name"] = os.environ.get("DATASET_NAME")
             else:
                 data["dataset_name"] = os.path.join(dir_path, "distilled")
 

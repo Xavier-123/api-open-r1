@@ -12,6 +12,7 @@ from distilabel.pipeline import Pipeline
 from distilabel.steps import StepResources
 from distilabel.steps.tasks import TextGeneration
 from tools.log import logger
+from tools.utils import data_callback, sft_callback, grpo_callback
 from tools.error_define import FileConversionError, DataDistillationError
 
 
@@ -112,7 +113,8 @@ def distill(args):
         print(f"  {arg}: {value}")
     print()
 
-    logger.info(f"Loading '{args.hf_dataset}' (config: {args.hf_dataset_config}, split: {args.hf_dataset_split}) dataset...")
+    logger.info(
+        f"Loading '{args.hf_dataset}' (config: {args.hf_dataset_config}, split: {args.hf_dataset_split}) dataset...")
     try:
         dataset = datasets.load_from_disk(args.hf_dataset)
 
@@ -197,14 +199,9 @@ def distill(args):
 
     logger.info("distilled dataset:")
     logger.info(dataset)
-    # logger.info("distilled dataset:")
-    # if args.split_train_test == 1:
-    #     for i in range(dataset.shape[0]):
-    #         logger.info(dataset[i])
 
 
 def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
-
     # 转为蒸馏前格式
     try:
         excel_2_arrow(tmp_path, distill_data_path, args)
@@ -228,17 +225,17 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
         raise DataDistillationError(e)
 
     try:
-
-        _url = os.environ.get("CALLBACK_URL", "http://127.0.0.1:8018/test")
-        data = {
-            "task_id": args.task_id,
-            "distilled_data_path": args.hf_output_dataset
-        }
-        req = requests.post(_url, json=json.dumps(data))
-        if req.status_code == 200:
-            logger.info(f"数据蒸馏完成, data be saved {args.hf_output_dataset}")
-        else:
-            raise f"Connection {_url} failed."
+        data_callback(args)
+        # _url = os.environ.get("CALLBACK_URL", "http://127.0.0.1:8018/test")
+        # data = {
+        #     "task_id": args.task_id,
+        #     "distilled_data_path": args.hf_output_dataset
+        # }
+        # req = requests.post(_url, json=json.dumps(data))
+        # if req.status_code == 200:
+        #     logger.info(f"数据蒸馏完成, data be saved {args.hf_output_dataset}")
+        # else:
+        #     raise f"Connection {_url} failed."
 
     except Exception as e:
         del task_dict[args.task_id]
@@ -267,28 +264,31 @@ def distilled_sft(system_cmd_str_list, task_id, output_dir, sft_task_dict):
 
     try:
         # 调用接口，返回模型路径
-        data = {
-            "task_id": task_id,
-            "sft_model_path": output_dir,
-            "code": 0,
-            "msg": "",
-        }
-        _url = os.environ.get("CALLBACK_URL", "http://127.0.0.1:8018/test")
-
-        # 判断训练结果，返回不同状态码
-        if sft_task_dict[task_id]["code"] == 0:
-            data["code"] = 0
-        else:
-            data["code"] = -1
-            data["msg"] = sft_task_dict[task_id]["msg"]
-        req = requests.post(_url, json=json.dumps(data))
-
-        if req.status_code == 200 and data["code"] == 0:
-            logger.info(f"sft completed. sft model be saved {output_dir}")
-        elif req.status_code != 200 and data["code"] == 0:
-            logger.info(f"Connection {_url} failed.")
-        else:
-            logger.info(f"task_id: {task_id}, distilled data failed.")
+        sft_callback(task_id, output_dir, sft_task_dict)
+        # data = {
+        #     "task_id": task_id,
+        #     "sft_model_path": output_dir,
+        #     "code": 0,
+        #     "msg": "",
+        # }
+        #
+        # # 判断训练结果，返回不同状态码
+        # if sft_task_dict[task_id]["code"] == 0:
+        #     data["code"] = 0
+        # else:
+        #     data["code"] = -1
+        #     data["msg"] = sft_task_dict[task_id]["msg"]
+        #
+        # # _callback(args)
+        # _url = os.environ.get("CALLBACK_URL", "http://127.0.0.1:8018/test")
+        # req = requests.post(_url, json=json.dumps(data))
+        #
+        # if req.status_code == 200 and data["code"] == 0:
+        #     logger.info(f"sft completed. sft model be saved {output_dir}")
+        # elif req.status_code != 200 and data["code"] == 0:
+        #     logger.info(f"Connection {_url} failed.")
+        # else:
+        #     logger.info(f"task_id: {task_id}, distilled data failed.")
     except Exception as e:
         logger.info(e)
 
@@ -302,16 +302,17 @@ def _grpo(system_cmd_grpo, task_id, output_dir):
 
     try:
         # 调用接口，返回模型路径
-        data = {
-            "task_id": task_id,
-            "sft_model_path": output_dir
-        }
-        _url = os.environ.get("_GRPO_URL", "http://127.0.0.1:8018/test")
-        req = requests.post(_url, json=json.dumps(data))
-        if req.status_code == 200:
-            logger.info(f"GRPO completed. GRPO model be saved {output_dir}")
-        else:
-            raise f"Connection {_url} failed."
+        grpo_callback(task_id, output_dir)
+        # data = {
+        #     "task_id": task_id,
+        #     "sft_model_path": output_dir
+        # }
+        # _url = os.environ.get("_GRPO_URL", "http://127.0.0.1:8018/test")
+        # req = requests.post(_url, json=json.dumps(data))
+        # if req.status_code == 200:
+        #     logger.info(f"GRPO completed. GRPO model be saved {output_dir}")
+        # else:
+        #     raise f"Connection {_url} failed."
     except Exception as e:
         logger.info(e)
 

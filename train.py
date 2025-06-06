@@ -22,8 +22,9 @@ os.environ.setdefault("EVAL_BATCH_SIZE", "4")
 
 # 使用SFT微调模型
 def train():
-    task_id = os.environ.get("TASK_ID")
-    dir_path = os.path.split(os.path.abspath(__file__))[0] + f"/file_save/{task_id}"
+    # task_id = os.environ.get("TASK_ID")
+    # dir_path = os.path.split(os.path.abspath(__file__))[0] + f"/file_save/{task_id}"
+    dir_path = os.path.split(os.path.abspath(__file__))[0] + f"/file_save"
     os.makedirs(dir_path, exist_ok=True)
 
     # 更改 accelerate 配置
@@ -37,12 +38,13 @@ def train():
     logger.info(data)
     logger.info("")
 
-    with open(os.path.join(dir_path, "accelerate_configs.yaml"), 'w', encoding='utf-8') as f:
+    # with open(os.path.join(dir_path, "accelerate_configs.yaml"), 'w', encoding='utf-8') as f:
+    with open(accelerate_configs_path, 'w', encoding='utf-8') as f:             # 使用容器启动可直接修改配置文件
         # 使用 yaml.dump() 方法将字典 d 转换为 YAML 格式，并将其写入文件中
         f.write(yaml.dump(data))
 
     # 根据环境变量，更改sft训练配置
-    sft_configs_path = os.path.join(os.path.abspath(os.getcwd()), "file_save/sft-config_demo.yaml")
+    sft_configs_path = os.path.join(os.path.abspath(os.getcwd()), "file_save/sft_config_demo.yaml")
     with open(sft_configs_path, 'r') as f:
         data = yaml.safe_load(f)
 
@@ -70,14 +72,16 @@ def train():
     logger.info(data)
     logger.info("")
 
-    with open(os.path.join(dir_path, "sft_configs.yaml"), 'w', encoding='utf-8') as f:
-        # 使用 yaml.dump() 方法将字典 d 转换为 YAML 格式，并将其写入文件中
+    # with open(os.path.join(dir_path, "sft_config_demo.yaml"), 'w', encoding='utf-8') as f:
+    with open(sft_configs_path, 'w', encoding='utf-8') as f:
         f.write(yaml.dump(data))
 
     system_cmd_str_list = ["accelerate", "launch",
-                           "--config_file", os.path.abspath(os.getcwd()) + f"/file_save/{task_id}/accelerate_configs.yaml",
+                           # "--config_file", os.path.abspath(os.getcwd()) + f"/file_save/{task_id}/accelerate_configs.yaml",
+                           "--config_file", accelerate_configs_path,
                            os.path.join(os.path.abspath(os.getcwd()), "third_party_tools", "open-r1/src/open_r1/sft.py"),
-                           "--config", os.path.join(dir_path, "sft_configs.yaml")]
+                           # "--config", os.path.join(dir_path, "sft_configs.yaml")]
+                           "--config", sft_configs_path]
     logger.info(" ".join(system_cmd_str_list))
 
     result = subprocess.run(system_cmd_str_list, capture_output=True, text=True)
@@ -93,6 +97,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-    # import torch
-    # print(torch.cuda.device_count())

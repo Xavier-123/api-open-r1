@@ -107,6 +107,11 @@ def main(script_args, training_args, model_args):
         print(f"{e}")
         dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config)
         logger.info(f"load_dataset success.")
+
+    # 判断是否评估
+    if not os.environ.get("DO_EVAL") and "test" not in dataset:
+        logger.info("do_eval is False or test not in dataset.")
+
     print("dataset:")
     print(dataset)
 
