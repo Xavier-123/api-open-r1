@@ -75,6 +75,11 @@ async def async_distill_data(
     dir_path = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0] + f"/file_save/{task_id}"
     distill_data_path = dir_path
     distilled_data_path = os.path.join(dir_path, "distilled")
+
+    # 设置参数
+    args.hf_dataset = distill_data_path
+    args.hf_output_dataset = distilled_data_path
+
     tmp_path = os.path.join(dir_path, str("tmp_" + args.file.filename))
 
     try:
@@ -92,7 +97,8 @@ async def async_distill_data(
 
         # 调用 distill 获取
         task_dict[task_id] = {"time": time.time(), "code": 2, "msg": ""}
-        thr = Process(target=openR1_distill, args=(args, tmp_path, distill_data_path, distilled_data_path, task_dict))
+        thr = Process(target=openR1_distill, args=(args, tmp_path, task_dict))
+        # thr = Process(target=openR1_distill, args=(args, tmp_path, distill_data_path, distilled_data_path, task_dict))
         thr.daemon = True
         threads_list.append(thr)
         thr.start()

@@ -205,26 +205,27 @@ def distill(args):
     logger.info(dataset)
 
 
-def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
+def openR1_distill(args, tmp_path, task_dict):
+# def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_dict):
     # 转为蒸馏前格式
     try:
-        excel_2_arrow(tmp_path, distill_data_path, args)
+        excel_2_arrow(tmp_path, args.hf_dataset, args)
         logger.info("excel to arrow Format conversion successful.")
     except Exception as e:
         del task_dict[args.task_id]
-        os.remove(distill_data_path)
+        os.remove(args.hf_dataset)
         os.remove(tmp_path)
         raise FileConversionError(e)
 
     # 蒸馏数据
     try:
-        args.hf_dataset = distill_data_path
-        args.hf_output_dataset = distilled_data_path
+        # args.hf_dataset = distill_data_path
+        # args.hf_output_dataset = distilled_data_path
         distill(args)
         logger.info("distilled success.")
     except Exception as e:
         del task_dict[args.task_id]
-        os.remove(distill_data_path)
+        os.remove(args.hf_dataset)
         os.remove(tmp_path)
         raise DataDistillationError(e)
 
@@ -243,7 +244,7 @@ def openR1_distill(args, tmp_path, distill_data_path, distilled_data_path, task_
 
     except Exception as e:
         del task_dict[args.task_id]
-        os.remove(distill_data_path)
+        os.remove(args.hf_dataset)
         os.remove(tmp_path)
         raise DataDistillationError(e)
 

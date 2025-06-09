@@ -83,6 +83,19 @@ def main(script_args, training_args, model_args):
     transformers.utils.logging.enable_default_handler()
     transformers.utils.logging.enable_explicit_format()
 
+    # 判断是否高效微调
+    if os.environ.get("TRAIN_TYPE") == "lora":
+        logger.info("---------- lora微调 ----------")
+        model_args.use_peft = True
+        model_args.lora_r = 8
+        model_args.lora_alpha = 16
+        model_args.lora_dropout = 0.05
+        model_args.lora_target_modules = None
+        model_args.lora_modules_to_save = None
+        model_args.lora_task_type = "CAUSAL_LM"
+    else:
+        logger.info("---------- 全量微调 ----------")
+
     logger.info(f"Model parameters {model_args}")
     logger.info(f"Script parameters {script_args}")
     logger.info(f"Training parameters {training_args}")
@@ -109,9 +122,11 @@ def main(script_args, training_args, model_args):
         logger.info(f"load_dataset success.")
 
     # 判断是否评估
-    if not os.environ.get("DO_EVAL") and "test" not in dataset:
-        logger.info("do_eval is False or test not in dataset.")
-        raise "do_eval is False or test not in dataset."
+    if not os.environ.get("DO_EVAL"):
+        training_args.eval_strategy = "no"
+    elif os.environ.get("DO_EVAL") and "test" not in dataset:
+        logger.info("test not in dataset.")
+        # raise "test not in dataset."
     else:
         training_args.eval_strategy = "steps"
 
@@ -143,11 +158,6 @@ def main(script_args, training_args, model_args):
     )
     training_args.model_init_kwargs = model_kwargs
 
-    # try:
-    #     dataset = dataset[script_args.dataset_train_split]
-    # except Exception as e:
-    #     print(e)
-    #     dataset = dataset
     ############################
     # Initialize the SFT Trainer
     ############################
@@ -205,7 +215,8 @@ def main(script_args, training_args, model_args):
     ##########
     # Evaluate
     ##########
-    if training_args.do_eval:
+    # if training_args.do_eval:
+    if training_args.do_eval and training_args.eval_strategy != "no":
         logger.info("*** Evaluate ***")
         metrics = trainer.evaluate()
         metrics["eval_samples"] = len(dataset[script_args.dataset_test_split])
@@ -223,7 +234,6 @@ def main(script_args, training_args, model_args):
 if __name__ == "__main__":
     parser = TrlParser((ScriptArguments, SFTConfig, ModelConfig))
     script_args, training_args, model_args = parser.parse_args_and_config()
-
      # 笔记本设置use_liger_kernel=false
     training_args.use_liger = False
     training_args.use_liger_kernel = False
