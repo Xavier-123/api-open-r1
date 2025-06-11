@@ -4,22 +4,18 @@ import io
 import yaml
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import UploadFile, File, Form, status
-from multiprocessing import Process, Event
+from multiprocessing import Process
 from tools.error_define import BinaryDecodingError, FileConversionError, DataDistillationError
 from tools.distill import openR1_distill, excel_2_arrow, distill, distilled_sft, _grpo
 from tools.log import logger
-# from tools.envs import *
-from server.router import openr1_router, ResponseModel, GenerationRequestModel
+from server.router import openr1_router, ResponseModel, GenerationRequestModel, EventInfoRequest
 import uuid
 import time
-from threading import Thread, Event
 
 task_dict = {}
 sft_task_dict = {}
 grpo_task_dict = {}
 threads_list = []
-
-
 
 
 @openr1_router.post(path="/async_distill_data", response_model=ResponseModel, tags=["蒸馏数据"])
@@ -117,7 +113,6 @@ async def async_distill_data(
             os.remove(tmp_path)
         content = {"isSuc": False, "code": -1, "msg": str(e), "res": {}}
         return JSONResponse(status_code=status.HTTP_200_OK, content=content)
-
 
 
 @openr1_router.post(path="/async_sft_distilled", response_model=ResponseModel, tags=["使用蒸馏数据 SFT"])
@@ -254,25 +249,40 @@ async def async_grpo(
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
-
 @openr1_router.post(path="/get_data")
 async def get_data(
-        task_id: str = Form("1234", example=""),
-        task_type: str = Form("data", example=""),   # data/model
+        task_id: str = Form("", example=""),
+        data_path: str = Form("", example=""),
 ):
     '''获取蒸馏数据'''
-    distilled_file_path = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}/distilled")
-    # 假设有以下文件路径
-    file_paths = os.listdir(distilled_file_path)
+    if len(task_id) > 0:
+        distilled_file_path = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}/distilled")
+    elif len(data_path) > 0:
+        distilled_file_path = data_path
+    else:
+        raise "task_id and data_path must have one"
+    # distilled_file_path = r"F:\inspur\GPU\api-open-r1\file_save\train0.75-test0.25\distilled"
 
-    # 创建内存中的 ZIP 文件
     zip_buffer = io.BytesIO()
+
+    # # 创建内存中的 ZIP 文件
+    # # 假设有以下文件路径
+    # file_paths = os.listdir(distilled_file_path)
+    # with ZipFile(zip_buffer, "w") as zip_file:
+    #     for file_path in file_paths:
+    #         # 在 ZIP 文件中创建相对路径
+    #         start = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}")
+    #         arcname = os.path.relpath(os.path.join(distilled_file_path, file_path), start=start)
+    #         zip_file.write(os.path.join(distilled_file_path, file_path), arcname)  # 将文件添加到 ZIP
+
     with ZipFile(zip_buffer, "w") as zip_file:
-        for file_path in file_paths:
-            # 在 ZIP 文件中创建相对路径
-            start = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}")
-            arcname = os.path.relpath(os.path.join(distilled_file_path, file_path), start=start)
-            zip_file.write(os.path.join(distilled_file_path, file_path), arcname)  # 将文件添加到 ZIP
+        for root, dirs, files in os.walk(distilled_file_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # 计算相对路径，避免压缩包内包含完整路径
+                # start = os.path.join(os.path.abspath(os.getcwd()), f"file_save/{task_id}")
+                arcname = os.path.relpath(file_path, start=distilled_file_path)
+                zip_file.write(os.path.join(distilled_file_path, file_path), arcname)
 
     zip_buffer.seek(0)  # 将指针移回 ZIP 文件开头
 
@@ -284,11 +294,11 @@ async def get_data(
     )
 
 
-@openr1_router.post(path="/test")
-async def test(
-        task_id: str = Form("1234567890", example=""),
-        distilled_data_path: str = Form("", example=""),
+# @openr1_router.post(path="/getOperationEventInfo")
+@openr1_router.post(path="/distillationTaskRun/getOperationEventInfo")
+async def getOperationEventInfo(
+        reqObject: EventInfoRequest
 ):
     content = {"isSuc": True, "code": 0, "msg": "Success ~",
-               "res": {"task_id": task_id, "distilled_data_path": distilled_data_path}}
+               "res": reqObject.taskRunId}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)

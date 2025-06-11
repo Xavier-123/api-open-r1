@@ -37,6 +37,12 @@ class ResponseModel(BaseModel):
 
 
 
+class EventInfoRequest(BaseModel):
+    taskRunId: str = Field("", example="")
+    pathKey: str = Field("", example="")
+    ifSuccess: bool = Field(True, example="")
+    msg: str = Field("", example="")
+
 
 
 # 路由
